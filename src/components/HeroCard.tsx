@@ -1,76 +1,48 @@
-import { Card, CardContent, CardMedia, Typography, Box, Button, Skeleton } from '@mui/material';
 import { useState } from 'react';
 import { Superhero } from '../types/superhero';
 import { HeroDialog } from './HeroDialog';
 
 interface HeroCardProps {
-  hero?: Superhero;
-  isLoading?: boolean;
+  hero: Superhero;
 }
 
-export const HeroCard = ({ hero, isLoading = false }: HeroCardProps) => {
+export const HeroCard = ({ hero }: HeroCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  if (isLoading) {
-    return (
-      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Skeleton variant="rectangular" height={200} />
-        <CardContent>
-          <Skeleton variant="text" height={32} />
-          <Skeleton variant="text" height={24} />
-          <Box sx={{ mt: 2 }}>
-            <Skeleton variant="rectangular" height={36} />
-          </Box>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!hero) return null;
+  const handleOpenDialog = () => setIsDialogOpen(true);
+  const handleCloseDialog = () => setIsDialogOpen(false);
 
   return (
     <>
-      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <CardMedia
-          component="img"
-          height="200"
-          image={hero.image.url}
-          alt={hero.name}
-          sx={{ objectFit: 'cover' }}
-        />
-        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Typography gutterBottom variant="h5" component="div">
-            {hero.name}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {hero.biography.publisher}
-          </Typography>
-          <Box sx={{ mt: 'auto', pt: 2 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => setIsDialogOpen(true)}
-              sx={{
-                bgcolor: '#DD2C2C',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: '#B22424',
-                },
-              }}
-            >
-              More Info
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-      
-      {hero && (
-        <HeroDialog
-          hero={hero}
-          open={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-        />
-      )}
+      <div className="card" onClick={handleOpenDialog}>
+        <div className="relative">
+          <img
+            src={hero.image.url}
+            alt={hero.name}
+            className="w-full h-48 object-cover rounded-t-lg"
+            loading="lazy"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2">
+            <h3 className="text-white font-bold">{hero.name}</h3>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm">
+              <span className="font-bold">Real Name:</span> {hero.biography['full-name']}
+            </p>
+            <p className="text-sm">
+              <span className="font-bold">Publisher:</span> {hero.biography.publisher}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <HeroDialog
+        hero={hero}
+        open={isDialogOpen}
+        onClose={handleCloseDialog}
+      />
     </>
   );
 }; 

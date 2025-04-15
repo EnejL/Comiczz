@@ -40,7 +40,13 @@ export interface Image {
   url: string;
 }
 
-export interface Superhero {
+interface BaseResponse {
+  response: 'success' | 'error';
+  error?: string;
+}
+
+export interface Superhero extends BaseResponse {
+  response: 'success';
   id: string;
   name: string;
   powerstats: PowerStats;
@@ -51,16 +57,12 @@ export interface Superhero {
   image: Image;
 }
 
-export interface SearchResponse {
-  response: 'success' | 'error';
+export interface SearchResponse extends BaseResponse {
   'results-for'?: string;
   results?: Superhero[];
-  error?: string;
 }
 
-export interface SuperheroResponse {
-  response: 'success' | 'error';
-  error?: string;
+export interface SuperheroResponse extends BaseResponse {
   id?: string;
   name?: string;
   powerstats?: PowerStats;

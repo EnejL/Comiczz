@@ -1,15 +1,11 @@
-import { Breadcrumbs as MuiBreadcrumbs, Container, Link, Typography } from '@mui/material';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-
 export const Breadcrumbs = () => {
   return (
-    <Container maxWidth="lg" sx={{ py: 2 }}>
-      <MuiBreadcrumbs separator={<NavigateNextIcon fontSize="small" />}>
-        <Link underline="hover" color="inherit" href="/">
-          Home
-        </Link>
-        <Typography color="text.primary">Comics</Typography>
-      </MuiBreadcrumbs>
-    </Container>
+    <nav className="container py-4">
+      <div className="flex items-center gap-2">
+        <a href="/" className="text-primary hover:underline">Home</a>
+        <span className="text-secondary">/</span>
+        <span className="text-disabled">Browse</span>
+      </div>
+    </nav>
   );
 }; 

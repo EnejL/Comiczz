@@ -1,0 +1,81 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-index-modal);
+  padding: var(--spacing-md);
+}
+
+.modal {
+  position: relative;
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalEnter var(--transition-normal);
+}
+
+.fullWidth {
+  max-width: 90vw;
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+  z-index: 1;
+}
+
+.closeButton:hover {
+  background-color: color-mix(in srgb, var(--color-surface) 85%, black);
+}
+
+.header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-surface);
+}
+
+.content {
+  padding: var(--spacing-md);
+  overflow-y: auto;
+  max-height: calc(90vh - 120px); /* Account for header and padding */
+}
+
+.actions {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--color-surface);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+} 

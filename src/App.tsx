@@ -1,29 +1,16 @@
-import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { HeroGrid } from './components/HeroGrid';
 import { Header } from './components/Header';
 import { Breadcrumbs } from './components/Breadcrumbs';
-
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+import { ThemeProvider } from './ui/theme/ThemeProvider';
 
 export default function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <ThemeProvider>
+      <div className="min-h-screen bg-surface">
         <Header />
         <Breadcrumbs />
         <HeroGrid />
-      </Box>
+      </div>
     </ThemeProvider>
   );
 }
