@@ -1,115 +1,67 @@
-import { ReactNode, useEffect, useState, useRef } from 'react';
-import { Superhero, SuperheroResponse } from '../types/superhero';
+import React, { useState, useEffect } from 'react';
+import { Superhero } from '../types/superhero';
 import { getHeroesBatch } from '../services/superheroApi';
 import { HeroCard } from './HeroCard';
 import '../styles/Grid.css';
 
-const BATCH_SIZE = 10;
-const INITIAL_START_ID = 1;
-
 interface HeroWithIndex extends Superhero {
   uniqueIndex: number;
-  batchIndex: number;
 }
 
-function isValidHero(response: SuperheroResponse): response is Superhero {
-  return (
-    response.response === 'success' &&
-    typeof response.id === 'string' &&
-    typeof response.name === 'string' &&
-    response.powerstats !== undefined &&
-    response.biography !== undefined &&
-    response.appearance !== undefined &&
-    response.work !== undefined &&
-    response.connections !== undefined &&
-    response.image !== undefined
-  );
-}
-
-export const Grid = () => {
+const Grid: React.FC = () => {
   const [heroes, setHeroes] = useState<HeroWithIndex[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentStartId, setCurrentStartId] = useState(INITIAL_START_ID);
-  const [loadedHeroIds, setLoadedHeroIds] = useState<Set<string>>(new Set());
-  const uniqueIndexCounter = useRef(0);
-
-  useEffect(() => {
-    loadMoreHeroes();
-  }, []);
+  const [uniqueIndex, setUniqueIndex] = useState(0);
 
   const loadMoreHeroes = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const responses = await getHeroesBatch(currentStartId, BATCH_SIZE);
-      const validHeroes = responses.filter(isValidHero);
-      
-      const newHeroes = validHeroes
-        .filter(hero => !loadedHeroIds.has(hero.id))
-        .map(hero => {
-          uniqueIndexCounter.current += 1;
-          return {
-            ...hero,
-            uniqueIndex: uniqueIndexCounter.current,
-            batchIndex: currentStartId
-          };
-        });
+      const startId = heroes.length + 1;
+      const batchSize = 12;
+      const responses = await getHeroesBatch(startId, batchSize);
 
-      setLoadedHeroIds(new Set([...Array.from(loadedHeroIds), ...newHeroes.map(h => h.id)]));
-      setHeroes(prevHeroes => [...prevHeroes, ...newHeroes]);
-      setCurrentStartId(prev => prev + BATCH_SIZE);
+      const newHeroes = responses.map((response) => {
+        if (response.response === 'success') {
+          return {
+            ...response,
+            uniqueIndex: uniqueIndex + 1
+          };
+        }
+        return null;
+      }).filter((hero): hero is HeroWithIndex => hero !== null);
+
+      setHeroes(prev => [...prev, ...newHeroes]);
+      setUniqueIndex(prev => prev + newHeroes.length);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load heroes');
+      setError('Failed to load heroes. Please try again.');
+      console.error('Error loading heroes:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (error) {
-    return (
-      <div className="error-message">
-        <p>{error}</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    loadMoreHeroes();
+  }, []);
 
   return (
     <div className="grid-container">
       <div className="grid">
-        {heroes.map((hero) => {
-          console.log('Hero data:', hero);
-          return (
-            <HeroCard
-              key={`${hero.id}-${hero.batchIndex}`}
-              hero={hero}
-            />
-          );
-        })}
+        {heroes.map((hero) => (
+          <HeroCard key={`${hero.id}-${hero.uniqueIndex}`} hero={hero} />
+        ))}
       </div>
-      {loading && (
-        <div className="loading-message">
-          <p>Loading heroes...</p>
-        </div>
-      )}
-      {!loading && heroes.length > 0 && (
-        <div className="load-more-container">
-          <button
-            onClick={loadMoreHeroes}
-            className="button button-submit"
-          >
-            Load More Heroes
-          </button>
-        </div>
-      )}
+      {loading && <div className="loading-message">Loading...</div>}
+      {error && <div className="error-message">{error}</div>}
+      <div className="load-more-container">
+        <button className="load-more-button" onClick={loadMoreHeroes} disabled={loading}>
+          {loading ? 'Loading...' : 'Load More'}
+        </button>
+      </div>
     </div>
   );
 };
 
-interface GridItemProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export const GridItem = ({ children, className = '' }: GridItemProps) => {
-  return <div className={className}>{children}</div>;
-}; 
+export default Grid; 

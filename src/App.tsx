@@ -1,6 +1,6 @@
 import { Header } from './components/Header';
 import { Breadcrumbs } from './components/Breadcrumbs';
-import { Grid } from './components/Grid';
+import Grid from './components/Grid';
 
 export default function App() {
   return (
