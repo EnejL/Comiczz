@@ -1,5 +1,7 @@
-import { Box, Container, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { HeroGrid } from './components/HeroGrid';
+import { Header } from './components/Header';
+import { Breadcrumbs } from './components/Breadcrumbs';
 
 const theme = createTheme({
   palette: {
@@ -18,9 +20,9 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <Container maxWidth="xl">
-          <HeroGrid />
-        </Container>
+        <Header />
+        <Breadcrumbs />
+        <HeroGrid />
       </Box>
     </ThemeProvider>
   );
