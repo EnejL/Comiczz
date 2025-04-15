@@ -1,15 +1,27 @@
-import './App.css';
+import { Box, Container, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { HeroGrid } from './components/HeroGrid';
 
-function App() {
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
+
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Hello world
-        </p>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Container maxWidth="xl">
+          <HeroGrid />
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 }
-
-export default App;
