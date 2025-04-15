@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { SearchResponse, SuperheroResponse } from '../types/superhero';
 
-const API_BASE_URL = 'https://superheroapi.com/api';
-const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+const API_BASE_URL = '/api';
 const API_TOKEN = process.env.REACT_APP_SUPERHERO_API_TOKEN;
 
 if (!API_TOKEN) {
@@ -10,11 +9,7 @@ if (!API_TOKEN) {
 }
 
 const api = axios.create({
-  baseURL: `${CORS_PROXY}${API_BASE_URL}/${API_TOKEN}`,
-  headers: {
-    'Origin': 'http://localhost:3000',
-    'X-Requested-With': 'XMLHttpRequest'
-  }
+  baseURL: `${API_BASE_URL}/${API_TOKEN}`
 });
 
 // Enhanced delay function with exponential backoff
@@ -22,9 +17,10 @@ const delay = async (ms: number) => new Promise(resolve => setTimeout(resolve, m
 
 // Rate limiting configuration
 const rateLimitConfig = {
-  baseDelay: 1000,  // Base delay of 1 second
-  maxDelay: 10000,  // Maximum delay of 10 seconds
-  maxRetries: 3,    // Maximum number of retries
+  baseDelay: 500,  // Base delay of 0.5 seconds
+  maxDelay: 5000,  // Maximum delay of 5 seconds
+  maxRetries: 3,   // Maximum number of retries
+  concurrentRequests: 3, // Number of concurrent requests
 };
 
 // Enhanced request handler with exponential backoff
@@ -35,7 +31,7 @@ const makeRequestWithRetry = async <T>(
   try {
     return await requestFn();
   } catch (error: any) {
-    if (error.response?.status === 429 && retryCount < rateLimitConfig.maxRetries) {
+    if ((error.response?.status === 429 || error.response?.status === 403) && retryCount < rateLimitConfig.maxRetries) {
       const backoffDelay = Math.min(
         rateLimitConfig.baseDelay * Math.pow(2, retryCount),
         rateLimitConfig.maxDelay
@@ -49,44 +45,35 @@ const makeRequestWithRetry = async <T>(
   }
 };
 
-// Enhanced getHeroesBatch with better rate limiting
-export const getHeroesBatch = async (startId: number, batchSize: number): Promise<SuperheroResponse[]> => {
-  const results: SuperheroResponse[] = [];
+// Process requests in chunks to respect rate limits
+const processInChunks = async <T>(
+  items: number[],
+  processor: (id: number) => Promise<T>,
+  chunkSize: number
+): Promise<T[]> => {
+  const results: T[] = [];
   
-  for (let i = 0; i < batchSize; i++) {
-    const currentId = startId + i;
-    try {
-      const result = await makeRequestWithRetry(() => getHeroById(currentId));
-      results.push(result);
-      // Add a small delay between successful requests to prevent rate limiting
-      if (i < batchSize - 1) await delay(rateLimitConfig.baseDelay);
-    } catch (error: any) {
-      console.error(`Failed to fetch hero ${currentId}:`, error.message);
-      // Add a placeholder for failed requests to maintain batch size
-      results.push({
-        response: 'error',
-        error: error.message,
-        id: currentId.toString()
-      } as SuperheroResponse);
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    const chunkResults = await Promise.all(
+      chunk.map(item => makeRequestWithRetry(() => processor(item)))
+    );
+    results.push(...chunkResults);
+    
+    if (i + chunkSize < items.length) {
+      await delay(rateLimitConfig.baseDelay);
     }
   }
   
   return results;
 };
 
-export const searchHeroes = async (query: string): Promise<SearchResponse> => {
-  try {
-    const response = await api.get<SearchResponse>(`/search/${query}`);
-    return response.data;
-  } catch (error) {
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to search heroes'
-    };
-  }
+// Enhanced getHeroesBatch with better rate limiting
+export const getHeroesBatch = async (startId: number, batchSize: number): Promise<SuperheroResponse[]> => {
+  const ids = Array.from({ length: batchSize }, (_, i) => startId + i);
+  return processInChunks(ids, getHeroById, rateLimitConfig.concurrentRequests);
 };
 
-// Enhanced getHeroById with better error handling
 export const getHeroById = async (id: number): Promise<SuperheroResponse> => {
   try {
     const response = await api.get<SuperheroResponse>(`/${id}`);
@@ -100,6 +87,18 @@ export const getHeroById = async (id: number): Promise<SuperheroResponse> => {
       } as SuperheroResponse;
     }
     throw error;
+  }
+};
+
+export const searchHeroes = async (query: string): Promise<SearchResponse> => {
+  try {
+    const response = await api.get<SearchResponse>(`/search/${query}`);
+    return response.data;
+  } catch (error) {
+    return {
+      response: 'error',
+      error: error instanceof Error ? error.message : 'Failed to search heroes'
+    };
   }
 };
 
