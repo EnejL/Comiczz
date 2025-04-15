@@ -1,11 +1,16 @@
+import '../styles/Breadcrumbs.css';
+
 export const Breadcrumbs = () => {
   return (
-    <nav className="container py-4">
-      <div className="flex items-center gap-2">
-        <a href="/" className="text-primary hover:underline">Home</a>
-        <span className="text-secondary">/</span>
-        <span className="text-disabled">Browse</span>
-      </div>
+    <nav className="breadcrumbs">
+      <ul className="breadcrumbs-list container">
+        <li className="breadcrumbs-item">
+          <a href="/" className="breadcrumbs-link">Home</a>
+        </li>
+        <li className="breadcrumbs-item">
+          <span className="breadcrumbs-link">&gt; Comics</span>
+        </li>
+      </ul>
     </nav>
   );
 }; 

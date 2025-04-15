@@ -1,16 +1,13 @@
-import { HeroGrid } from './components/HeroGrid';
 import { Header } from './components/Header';
 import { Breadcrumbs } from './components/Breadcrumbs';
-import { ThemeProvider } from './ui/theme/ThemeProvider';
+import { Grid } from './components/Grid';
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-surface">
-        <Header />
-        <Breadcrumbs />
-        <HeroGrid />
-      </div>
-    </ThemeProvider>
+    <div className="app">
+      <Header />
+      <Breadcrumbs />
+      <Grid />
+    </div>
   );
 }

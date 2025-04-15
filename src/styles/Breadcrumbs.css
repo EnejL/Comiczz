@@ -1,0 +1,25 @@
+.breadcrumbs {
+  padding: 1rem 2rem;
+}
+
+.breadcrumbs-list {
+  list-style: none;
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 auto;
+}
+
+.breadcrumbs-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.breadcrumbs-link {
+  color: #666;
+  text-decoration: none;
+}
+
+.breadcrumbs-link:hover {
+  color: #DD2C2C;
+} 

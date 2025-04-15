@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import styles from './Card.module.css';
+import '../styles/Card.css';
 
 interface CardProps {
   children: ReactNode;
@@ -14,15 +14,13 @@ export const Card = ({
   loading = false,
   onClick
 }: CardProps) => {
-  const classes = [
-    styles.card,
-    loading && styles.loading,
-    className
-  ].filter(Boolean).join(' ');
-
   return (
-    <div className={classes} onClick={onClick} role={onClick ? 'button' : undefined}>
-      {children}
+    <div className={`card ${className}`} onClick={onClick}>
+      {loading ? (
+        <div className="card-loading">Loading...</div>
+      ) : (
+        children
+      )}
     </div>
   );
 };
@@ -34,7 +32,7 @@ interface CardImageProps {
 }
 
 export const CardImage = ({ src, alt, className = '' }: CardImageProps) => (
-  <img className={`${styles.image} ${className}`} src={src} alt={alt} />
+  <img src={src} alt={alt} className={`card-image ${className}`} />
 );
 
 interface CardContentProps {
@@ -43,9 +41,7 @@ interface CardContentProps {
 }
 
 export const CardContent = ({ children, className = '' }: CardContentProps) => (
-  <div className={`${styles.content} ${className}`}>
-    {children}
-  </div>
+  <div className={`card-content ${className}`}>{children}</div>
 );
 
 interface CardActionsProps {
@@ -54,7 +50,5 @@ interface CardActionsProps {
 }
 
 export const CardActions = ({ children, className = '' }: CardActionsProps) => (
-  <div className={`${styles.actions} ${className}`}>
-    {children}
-  </div>
+  <div className={`card-actions ${className}`}>{children}</div>
 ); 

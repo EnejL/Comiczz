@@ -1,0 +1,50 @@
+.header {
+  background-color: var(--background-primary);
+  color: var(--text-color-secondary);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  max-height: 10rem;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-logo {
+  height: 80%;
+  max-height: 8rem;
+  display: flex;
+  align-items: center;
+  background-color: orange;
+}
+
+.header-logo img {
+  height: 100%;
+  width: 8.5rem;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.header-link {
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.header-link:hover {
+  color: var(--primary-color);
+} 
