@@ -17,27 +17,61 @@ const api = axios.create({
   }
 });
 
-// Helper function to add delay between requests
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Enhanced delay function with exponential backoff
+const delay = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const getHeroesBatch = async (startId: number, count: number): Promise<SuperheroResponse[]> => {
+// Rate limiting configuration
+const rateLimitConfig = {
+  baseDelay: 1000,  // Base delay of 1 second
+  maxDelay: 10000,  // Maximum delay of 10 seconds
+  maxRetries: 3,    // Maximum number of retries
+};
+
+// Enhanced request handler with exponential backoff
+const makeRequestWithRetry = async <T>(
+  requestFn: () => Promise<T>,
+  retryCount = 0
+): Promise<T> => {
   try {
-    const heroIds = Array.from({ length: count }, (_, i) => startId + i);
-    const results: SuperheroResponse[] = [];
-
-    // Process heroes one at a time with delay
-    for (const id of heroIds) {
-      const result = await getHeroById(id);
-      results.push(result);
-      // Add a 1-second delay between requests
-      await delay(1000);
+    return await requestFn();
+  } catch (error: any) {
+    if (error.response?.status === 429 && retryCount < rateLimitConfig.maxRetries) {
+      const backoffDelay = Math.min(
+        rateLimitConfig.baseDelay * Math.pow(2, retryCount),
+        rateLimitConfig.maxDelay
+      );
+      
+      console.log(`Rate limit hit. Retrying in ${backoffDelay}ms... (Attempt ${retryCount + 1}/${rateLimitConfig.maxRetries})`);
+      await delay(backoffDelay);
+      return makeRequestWithRetry(requestFn, retryCount + 1);
     }
-
-    return results;
-  } catch (error) {
-    console.error('Failed to fetch heroes batch:', error);
-    return [];
+    throw error;
   }
+};
+
+// Enhanced getHeroesBatch with better rate limiting
+export const getHeroesBatch = async (startId: number, batchSize: number): Promise<SuperheroResponse[]> => {
+  const results: SuperheroResponse[] = [];
+  
+  for (let i = 0; i < batchSize; i++) {
+    const currentId = startId + i;
+    try {
+      const result = await makeRequestWithRetry(() => getHeroById(currentId));
+      results.push(result);
+      // Add a small delay between successful requests to prevent rate limiting
+      if (i < batchSize - 1) await delay(rateLimitConfig.baseDelay);
+    } catch (error: any) {
+      console.error(`Failed to fetch hero ${currentId}:`, error.message);
+      // Add a placeholder for failed requests to maintain batch size
+      results.push({
+        response: 'error',
+        error: error.message,
+        id: currentId.toString()
+      } as SuperheroResponse);
+    }
+  }
+  
+  return results;
 };
 
 export const searchHeroes = async (query: string): Promise<SearchResponse> => {
@@ -52,20 +86,20 @@ export const searchHeroes = async (query: string): Promise<SearchResponse> => {
   }
 };
 
-export const getHeroById = async (id: string | number): Promise<SuperheroResponse> => {
+// Enhanced getHeroById with better error handling
+export const getHeroById = async (id: number): Promise<SuperheroResponse> => {
   try {
     const response = await api.get<SuperheroResponse>(`/${id}`);
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 429) {
-      // If we hit rate limit, wait 2 seconds and try again
-      await delay(2000);
-      return getHeroById(id);
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return {
+        response: 'error',
+        error: 'Hero not found',
+        id: id.toString()
+      } as SuperheroResponse;
     }
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero details'
-    };
+    throw error;
   }
 };
 
