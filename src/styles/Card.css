@@ -1,6 +1,6 @@
 .card {
   background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
   overflow: hidden;
   transition: transform 0.2s ease;
   border: 2px solid #1D1D1D;
@@ -26,16 +26,15 @@
 }
 
 .card-title {
-  font-size: 15px;
+  font-size: 19px;
   text-align: center;
-  font-weight: bold;
   color: var(--text-color-primary);
-  margin-top: 2rem;
+  margin: 2rem 0;
 }
 
 .card-text {
-  color: #666;
-  margin: 0;
+  color: var(--text-color-primary);
+  font-weight: bold;
   text-align: center;
-  margin: .5rem 0 1rem 0;
+  margin: auto 0 1rem 0;
 } 
