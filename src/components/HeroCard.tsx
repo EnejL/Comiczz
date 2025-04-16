@@ -14,7 +14,7 @@ export const HeroCard = ({ hero }: HeroCardProps) => {
   const imageRef = useRef<HTMLImageElement>(null);
   
   useEffect(() => {
-    // Check if image is already cached by the browser
+    // Check if image is already cached by the client
     if (imageRef.current?.complete) {
       setImageLoaded(true);
     }

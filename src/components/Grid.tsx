@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Superhero } from '../types/superhero';
 import { getHeroesBatch } from '../services/superheroApi';
 import { HeroCard } from './HeroCard';
@@ -7,7 +7,7 @@ import { Spinner } from './Spinner';
 import FadingCard from './FadingCard';
 import '../styles/Grid.css';
 
-// UUID generator
+// UUID
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = (Math.random() * 16) | 0;
@@ -28,13 +28,14 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
   const [heroes, setHeroes] = useState<HeroWithUUID[]>([]);
   const [filteredHeroes, setFilteredHeroes] = useState<HeroWithUUID[]>([]);
   const [loading, setLoading] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentStartId, setCurrentStartId] = useState(1);
   const initialLoadCompleted = useRef(false);
+  
+  // Derive initialLoad from heroes length
+  const initialLoad = heroes.length === 0;
 
   const loadMoreHeroes = useCallback(async () => {
-    // Prevent multiple simultaneous loads
     if (loading) return;
     
     setLoading(true);
@@ -44,18 +45,12 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
       const batchSize = 20;
       const responses = await getHeroesBatch(currentStartId, batchSize);
 
-      // Log the raw API responses
-      console.log('Superhero API Responses:', responses);
-
       const newHeroes = responses
         .filter(response => response.response === 'success')
         .map(hero => ({
           ...hero,
           uuid: generateUUID()
         })) as HeroWithUUID[];
-
-      // Log the processed heroes with UUIDs
-      console.log('Processed heroes with UUIDs:', newHeroes);
 
       setHeroes(prev => [...prev, ...newHeroes]);
       setCurrentStartId(currentStartId + batchSize);
@@ -64,7 +59,6 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
       console.error('Error loading heroes:', err);
     } finally {
       setLoading(false);
-      setInitialLoad(false);
       initialLoadCompleted.current = true;
     }
   }, [loading, currentStartId]);
@@ -80,7 +74,6 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
         )
       );
     } else {
-      // 'Other' category
       setFilteredHeroes(
         heroes.filter(hero => 
           hero.biography?.publisher !== 'Marvel Comics' && 
@@ -90,19 +83,27 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
     }
   }, [heroes, publisherFilter]);
 
-  // Initial load effect
+  // Initial load
   useEffect(() => {
     if (!initialLoadCompleted.current) {
       loadMoreHeroes();
     }
   }, [loadMoreHeroes]);
 
-  // Create an array of fading cards for the loading state
-  const renderFadingCards = () => {
-    return Array(8).fill(0).map((_, index) => (
+  // Create fading cards for loading state
+  const renderFadingCards = useMemo(() => 
+    Array(8).fill(0).map((_, index) => (
       <FadingCard key={`fading-card-${index}`} />
-    ));
-  };
+    ))
+  , []);
+
+  // Generate empty state message
+  const emptyStateMessage = useMemo(() => {
+    if (heroes.length === 0) {
+      return "No heroes loaded. Click \"Load More\" to begin.";
+    }
+    return `No ${publisherFilter !== 'All' ? publisherFilter : ''} heroes found.`;
+  }, [heroes.length, publisherFilter]);
 
   return (
     <div className="grid-container">
@@ -110,7 +111,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
         {filteredHeroes.map((hero) => (
           <HeroCard key={hero.uuid} hero={hero} />
         ))}
-        {loading && renderFadingCards()}
+        {loading && renderFadingCards}
       </div>
       
       {loading && (
@@ -123,9 +124,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
       
       {filteredHeroes.length === 0 && !loading && !error && (
         <div className="no-heroes-message">
-          {heroes.length === 0 
-            ? "No heroes loaded. Click \"Load More\" to begin." 
-            : `No ${publisherFilter !== 'All' ? publisherFilter : ''} heroes found.`}
+          {emptyStateMessage}
         </div>
       )}
       

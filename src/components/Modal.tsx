@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Superhero } from '../types/superhero';
 import '../styles/Modal.css';
@@ -30,7 +30,7 @@ export const Modal = ({ hero, open, onClose }: ModalProps) => {
     };
   }, [open, onClose]);
 
-  // Helper function to handle empty or null values
+  // Handle empty or null values
   const formatValue = (value: string | null | undefined) => {
     if (!value || value === '-' || value === 'null') {
       return 'Unknown';
@@ -39,6 +39,26 @@ export const Modal = ({ hero, open, onClose }: ModalProps) => {
   };
 
   if (!open) return null;
+
+  // Biography fields to display
+  const biographyFields = [
+    { key: 'full-name' as const, label: 'Full Name' },
+    { key: 'alter-egos' as const, label: 'Alter Egos' },
+    { key: 'place-of-birth' as const, label: 'Place of Birth' },
+    { key: 'first-appearance' as const, label: 'First Appearance' },
+    { key: 'publisher' as const, label: 'Publisher' },
+    { key: 'alignment' as const, label: 'Alignment' }
+  ];
+
+  // Power stats to display
+  const powerStats = [
+    { key: 'intelligence' as const, label: 'Intelligence' },
+    { key: 'strength' as const, label: 'Strength' },
+    { key: 'speed' as const, label: 'Speed' },
+    { key: 'durability' as const, label: 'Durability' },
+    { key: 'power' as const, label: 'Power' },
+    { key: 'combat' as const, label: 'Combat' }
+  ];
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
@@ -57,94 +77,32 @@ export const Modal = ({ hero, open, onClose }: ModalProps) => {
               <h2 className="modal-title">{hero.name}</h2>
               
               <div className="biography-section">
-                <div className="biography-item">
-                  <span className="biography-label">Full Name:</span>
-                  <span className="biography-value">{formatValue(hero.biography['full-name'])}</span>
-                </div>
-                <div className="biography-item">
-                  <span className="biography-label">Alter Egos:</span>
-                  <span className="biography-value">{formatValue(hero.biography['alter-egos'])}</span>
-                </div>
-                <div className="biography-item">
-                  <span className="biography-label">Place of Birth:</span>
-                  <span className="biography-value">{formatValue(hero.biography['place-of-birth'])}</span>
-                </div>
-                <div className="biography-item">
-                  <span className="biography-label">First Appearance:</span>
-                  <span className="biography-value">{formatValue(hero.biography['first-appearance'])}</span>
-                </div>
-                <div className="biography-item">
-                  <span className="biography-label">Publisher:</span>
-                  <span className="biography-value">{formatValue(hero.biography.publisher)}</span>
-                </div>
-                <div className="biography-item">
-                  <span className="biography-label">Alignment:</span>
-                  <span className="biography-value">{formatValue(hero.biography.alignment)}</span>
-                </div>
+                {biographyFields.map(field => (
+                  <div className="biography-item" key={field.key}>
+                    <span className="biography-label">{field.label}:</span>
+                    <span className="biography-value">
+                      {formatValue(hero.biography[field.key])}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               <h3>Power Stats</h3>
               <div className="power-stats">
-                <div className="power-stat">
-                  <span className="power-stat-label">Intelligence:</span>
-                  <div className="power-stat-bar-container">
-                    <div 
-                      className="power-stat-bar"
-                      style={{ width: `${hero.powerstats.intelligence}%` }}
-                    ></div>
-                    <span className="power-stat-value">{hero.powerstats.intelligence}</span>
+                {powerStats.map(stat => (
+                  <div className="power-stat" key={stat.key}>
+                    <span className="power-stat-label">{stat.label}:</span>
+                    <div className="power-stat-bar-container">
+                      <div 
+                        className="power-stat-bar"
+                        style={{ width: `${hero.powerstats[stat.key]}%` }}
+                      ></div>
+                      <span className="power-stat-value">
+                        {hero.powerstats[stat.key]}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="power-stat">
-                  <span className="power-stat-label">Strength:</span>
-                  <div className="power-stat-bar-container">
-                    <div 
-                      className="power-stat-bar"
-                      style={{ width: `${hero.powerstats.strength}%` }}
-                    ></div>
-                    <span className="power-stat-value">{hero.powerstats.strength}</span>
-                  </div>
-                </div>
-                <div className="power-stat">
-                  <span className="power-stat-label">Speed:</span>
-                  <div className="power-stat-bar-container">
-                    <div 
-                      className="power-stat-bar"
-                      style={{ width: `${hero.powerstats.speed}%` }}
-                    ></div>
-                    <span className="power-stat-value">{hero.powerstats.speed}</span>
-                  </div>
-                </div>
-                <div className="power-stat">
-                  <span className="power-stat-label">Durability:</span>
-                  <div className="power-stat-bar-container">
-                    <div 
-                      className="power-stat-bar"
-                      style={{ width: `${hero.powerstats.durability}%` }}
-                    ></div>
-                    <span className="power-stat-value">{hero.powerstats.durability}</span>
-                  </div>
-                </div>
-                <div className="power-stat">
-                  <span className="power-stat-label">Power:</span>
-                  <div className="power-stat-bar-container">
-                    <div 
-                      className="power-stat-bar"
-                      style={{ width: `${hero.powerstats.power}%` }}
-                    ></div>
-                    <span className="power-stat-value">{hero.powerstats.power}</span>
-                  </div>
-                </div>
-                <div className="power-stat">
-                  <span className="power-stat-label">Combat:</span>
-                  <div className="power-stat-bar-container">
-                    <div 
-                      className="power-stat-bar"
-                      style={{ width: `${hero.powerstats.combat}%` }}
-                    ></div>
-                    <span className="power-stat-value">{hero.powerstats.combat}</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
@@ -153,31 +111,4 @@ export const Modal = ({ hero, open, onClose }: ModalProps) => {
     </div>,
     document.body
   );
-};
-
-interface ModalHeaderProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export const ModalHeader = ({ children, className = '' }: ModalHeaderProps) => (
-  <div className={`modal-title ${className}`}>{children}</div>
-);
-
-interface ModalContentProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export const ModalContent = ({ children, className = '' }: ModalContentProps) => (
-  <div className={`modal-content ${className}`}>{children}</div>
-);
-
-interface ModalActionsProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export const ModalActions = ({ children, className = '' }: ModalActionsProps) => (
-  <div className={`modal-actions ${className}`}>{children}</div>
-); 
+}; 

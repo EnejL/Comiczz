@@ -17,8 +17,7 @@ export const Button = ({
 }: ButtonProps) => {
   const classes = [
     'button',
-    variant === 'info' && 'button-info',
-    variant === 'submit' && 'button-submit',
+    `button-${variant}`,
     className
   ].filter(Boolean).join(' ');
 

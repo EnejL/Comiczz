@@ -12,7 +12,7 @@ const api = axios.create({
   baseURL: `${API_BASE_URL}/${API_TOKEN}`
 });
 
-// Enhanced cache with localStorage persistence
+// Cache with localStorage persistence
 const CACHE_KEY = 'superhero_cache';
 let cache: Record<string, any> = {};
 
@@ -51,12 +51,12 @@ const debouncedSaveCache = () => {
 // Enhanced delay function with exponential backoff
 const delay = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Rate limiting configuration - optimized for better performance
+// Rate limits
 const rateLimitConfig = {
-  baseDelay: 200,       // Reduced from 500ms to 200ms
-  maxDelay: 2000,       // Reduced from 5000ms to 2000ms
-  maxRetries: 3,        // Keep the same number of retries
-  concurrentRequests: 6 // Increased from 3 to 6
+  baseDelay: 200,
+  maxDelay: 2000,
+  maxRetries: 3,
+  concurrentRequests: 6
 };
 
 // Enhanced request handler with exponential backoff and caching
@@ -108,20 +108,19 @@ const processInChunks = async <T>(
     const chunkResults = await Promise.all(
       chunk.map(item => makeRequestWithRetry(
         () => processor(item), 
-        `hero-${item}`  // Add cache key based on hero ID
+        `hero-${item}`
       ))
     );
     results.push(...chunkResults);
     
     if (i + chunkSize < items.length) {
-      await delay(rateLimitConfig.baseDelay / 2); // Reduced delay between chunks
+      await delay(rateLimitConfig.baseDelay / 2);
     }
   }
   
   return results;
 };
 
-// Enhanced getHeroesBatch with better rate limiting and caching
 export const getHeroesBatch = async (startId: number, batchSize: number): Promise<SuperheroResponse[]> => {
   const ids = Array.from({ length: batchSize }, (_, i) => startId + i);
   return processInChunks(ids, getHeroById, rateLimitConfig.concurrentRequests);
