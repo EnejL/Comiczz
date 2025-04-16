@@ -1,0 +1,142 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  border-radius: .8rem;
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  width: 80rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0rem;
+  right: 2rem;
+  background: none;
+  border: none;
+  font-size: 5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--button-primary);
+}
+
+.modal-title {
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.modal-body {
+  display: flex;
+  gap: 2rem;
+}
+
+.modal-image {
+  width: 30rem;
+  height: auto;
+  border-radius: .8rem;
+  object-fit: cover;
+}
+
+.modal-details {
+  flex: 1;
+}
+
+.modal-details h3 {
+  font-weight: 600;
+  margin: 1rem 0 .5rem 0;
+}
+
+.modal-details p {
+  margin: .5rem 0;
+  color: #666;
+}
+
+.power-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.power-stat {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.power-stat-label {
+  font-weight: 500;
+  font-size: 1.4rem;
+}
+
+.power-stat-bar-container {
+  position: relative;
+  height: 1.8rem;
+  background-color: #e0e0e0;
+  border-radius: .9rem;
+  overflow: hidden;
+}
+
+.power-stat-bar {
+  height: 100%;
+  background-color: var(--button-secondary);
+  border-radius: .9rem;
+  transition: width .5s ease-out;
+}
+
+.power-stat-value {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  text-shadow: 0 0 3px rgba(0, 0, 0, .6);
+}
+
+/* Biography section styles */
+.biography-section {
+  margin: 1.5rem 0;
+}
+
+.biography-item {
+  display: flex;
+  margin-bottom: .8rem;
+}
+
+.biography-label {
+  font-weight: 600;
+  margin-right: .5rem;
+  color: var(--text-color-primary);
+}
+
+.biography-value {
+  flex: 1;
+  color: var(--text-color-shadow);
+}
+
+@media (max-width: 768px) {
+  .modal-body {
+    flex-direction: column;
+  }
+
+  .modal-image {
+    width: 100%;
+  }
+} 

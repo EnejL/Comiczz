@@ -1,15 +1,20 @@
-import './App.css';
+import { useState } from 'react';
+import { Header } from './components/Header';
+import { Breadcrumbs } from './components/Breadcrumbs';
+import Grid from './components/Grid';
+import { PublisherFilter } from './types/filters';
 
-function App() {
+export default function App() {
+  const [currentFilter, setCurrentFilter] = useState<PublisherFilter>('All');
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Hello world
-        </p>
-      </header>
+    <div className="app">
+      <Header 
+        currentFilter={currentFilter} 
+        onFilterChange={setCurrentFilter} 
+      />
+      <Breadcrumbs currentFilter={currentFilter} />
+      <Grid publisherFilter={currentFilter} />
     </div>
   );
 }
-
-export default App;

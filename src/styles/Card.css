@@ -1,0 +1,80 @@
+.card {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  border: .2rem solid #1D1D1D;
+  border-radius: .5rem;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.card-image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 20rem;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.card-image-loading {
+  opacity: 0;
+}
+
+.card-image-loaded {
+  opacity: 1;
+}
+
+.card-image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+}
+
+.pulse-animation {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: .6;
+  }
+  50% {
+    opacity: .3;
+  }
+  100% {
+    opacity: .6;
+  }
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.card-title {
+  font-size: 1.9rem;
+  text-align: center;
+  color: var(--text-color-primary);
+  margin: 2rem 0;
+}
+
+.card-text {
+  color: var(--text-color-primary);
+  font-weight: bold;
+  text-align: center;
+  margin: auto 0 1rem 0;
+} 
