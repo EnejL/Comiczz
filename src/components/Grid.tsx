@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Superhero } from '../types/superhero';
 import { getHeroesBatch } from '../services/superheroApi';
 import { HeroCard } from './HeroCard';
@@ -10,8 +10,8 @@ import '../styles/Grid.css';
 // UUID generator
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : ((r & 0x3) | 0x8);
     return v.toString(16);
   });
 };
@@ -33,7 +33,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
   const [currentStartId, setCurrentStartId] = useState(1);
   const initialLoadCompleted = useRef(false);
 
-  const loadMoreHeroes = async () => {
+  const loadMoreHeroes = useCallback(async () => {
     // Prevent multiple simultaneous loads
     if (loading) return;
     
@@ -67,7 +67,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
       setInitialLoad(false);
       initialLoadCompleted.current = true;
     }
-  };
+  }, [loading, currentStartId]);
 
   // Apply publisher filter whenever heroes or publisherFilter changes
   useEffect(() => {
@@ -95,7 +95,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
     if (!initialLoadCompleted.current) {
       loadMoreHeroes();
     }
-  }, []);
+  }, [loadMoreHeroes]);
 
   // Create an array of fading cards for the loading state
   const renderFadingCards = () => {
