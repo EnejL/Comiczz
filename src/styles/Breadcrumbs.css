@@ -5,21 +5,24 @@
 .breadcrumbs-list {
   list-style: none;
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   margin: 0 auto;
 }
 
 .breadcrumbs-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 
 .breadcrumbs-link {
-  color: #666;
+  color: var(--text-color-shadow);
   text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
 .breadcrumbs-link:hover {
-  color: #DD2C2C;
+  cursor: pointer;
+  opacity: .8;
 } 

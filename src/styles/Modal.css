@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -14,6 +14,7 @@
 .modal {
   background-color: white;
   border-radius: 8px;
+  border: 1px solid var(--border-color);
   padding: 2rem;
   max-width: 90%;
   max-height: 90vh;
@@ -24,23 +25,19 @@
 
 .modal-close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 0rem;
+  right: 2rem;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 5rem;
+  line-height: 1;
   cursor: pointer;
-  color: #666;
+  color: var(--button-primary);
 }
 
 .modal-title {
-  font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
-}
-
-.modal-content {
-  margin-top: 1rem;
 }
 
 .modal-body {
@@ -60,7 +57,6 @@
 }
 
 .modal-details h3 {
-  font-size: 1.25rem;
   font-weight: 600;
   margin: 1rem 0 0.5rem 0;
 }
@@ -73,8 +69,67 @@
 .power-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: 1.5rem;
   margin-top: 1rem;
+}
+
+.power-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.power-stat-label {
+  font-weight: 500;
+  font-size: 1.4rem;
+}
+
+.power-stat-bar-container {
+  position: relative;
+  height: 1.8rem;
+  background-color: #e0e0e0;
+  border-radius: 0.9rem;
+  overflow: hidden;
+}
+
+.power-stat-bar {
+  height: 100%;
+  background-color: var(--button-secondary);
+  border-radius: 0.9rem;
+  transition: width 0.5s ease-out;
+}
+
+.power-stat-value {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Biography section styles */
+.biography-section {
+  margin: 1.5rem 0;
+}
+
+.biography-item {
+  display: flex;
+  margin-bottom: 0.8rem;
+}
+
+.biography-label {
+  font-weight: 600;
+  /* min-width: 12rem; */
+  margin-right: .5rem;
+  color: var(--text-color-primary);
+}
+
+.biography-value {
+  flex: 1;
+  color: #666;
 }
 
 @media (max-width: 768px) {

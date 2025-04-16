@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Superhero } from '../types/superhero';
 import { getHeroesBatch } from '../services/superheroApi';
 import { HeroCard } from './HeroCard';
@@ -22,20 +22,31 @@ const Grid: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStartId, setCurrentStartId] = useState(1);
+  const initialLoadCompleted = useRef(false);
 
   const loadMoreHeroes = async () => {
+    // Prevent multiple simultaneous loads
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
+    
     try {
       const batchSize = 20;
       const responses = await getHeroesBatch(currentStartId, batchSize);
+
+      // Log the raw API responses
+      console.log('Superhero API Responses:', responses);
 
       const newHeroes = responses
         .filter(response => response.response === 'success')
         .map(hero => ({
           ...hero,
-          uuid: generateUUID() // Guaranteed unique
+          uuid: generateUUID()
         })) as HeroWithUUID[];
+
+      // Log the processed heroes with UUIDs
+      console.log('Processed heroes with UUIDs:', newHeroes);
 
       setHeroes(prev => [...prev, ...newHeroes]);
       setCurrentStartId(currentStartId + batchSize);
@@ -44,11 +55,15 @@ const Grid: React.FC = () => {
       console.error('Error loading heroes:', err);
     } finally {
       setLoading(false);
+      initialLoadCompleted.current = true;
     }
   };
 
+  // Initial load effect
   useEffect(() => {
-    loadMoreHeroes();
+    if (!initialLoadCompleted.current) {
+      loadMoreHeroes();
+    }
   }, []);
 
   return (
@@ -60,8 +75,11 @@ const Grid: React.FC = () => {
       </div>
       {loading && <div className="loading-message">Loading...</div>}
       {error && <div className="error-message">{error}</div>}
+      {heroes.length === 0 && !loading && !error && (
+        <div className="no-heroes-message">No heroes loaded. Click "Load More" to begin.</div>
+      )}
       <div className="load-more-container">
-        <button className="load-more-button" onClick={loadMoreHeroes} disabled={loading}>
+        <button className="button button-submit" onClick={loadMoreHeroes} disabled={loading}>
           {loading ? 'Loading...' : 'Load More'}
         </button>
       </div>

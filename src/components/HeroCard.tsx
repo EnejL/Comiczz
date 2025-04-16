@@ -27,8 +27,8 @@ export const HeroCard = ({ hero }: HeroCardProps) => {
         </div>
         <div className="card-content">
           <h3 className="card-title">{hero.name}</h3>
-          <p>
-            <span>Real Name:</span> {hero.biography['full-name']}
+          <p className="card-text">
+            {hero.biography.publisher}
           </p>
           <Button 
             variant="info" 
