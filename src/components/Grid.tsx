@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Superhero } from '../types/superhero';
 import { getHeroesBatch } from '../services/superheroApi';
 import { HeroCard } from './HeroCard';
+import { PublisherFilter } from '../types/filters';
 import '../styles/Grid.css';
 
 // UUID generator
@@ -17,8 +18,13 @@ interface HeroWithUUID extends Superhero {
   uuid: string;
 }
 
-const Grid: React.FC = () => {
+interface GridProps {
+  publisherFilter: PublisherFilter;
+}
+
+const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
   const [heroes, setHeroes] = useState<HeroWithUUID[]>([]);
+  const [filteredHeroes, setFilteredHeroes] = useState<HeroWithUUID[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStartId, setCurrentStartId] = useState(1);
@@ -59,6 +65,27 @@ const Grid: React.FC = () => {
     }
   };
 
+  // Apply publisher filter whenever heroes or publisherFilter changes
+  useEffect(() => {
+    if (publisherFilter === 'All') {
+      setFilteredHeroes(heroes);
+    } else if (publisherFilter === 'Marvel Comics' || publisherFilter === 'DC Comics') {
+      setFilteredHeroes(
+        heroes.filter(hero => 
+          hero.biography?.publisher === publisherFilter
+        )
+      );
+    } else {
+      // 'Other' category
+      setFilteredHeroes(
+        heroes.filter(hero => 
+          hero.biography?.publisher !== 'Marvel Comics' && 
+          hero.biography?.publisher !== 'DC Comics'
+        )
+      );
+    }
+  }, [heroes, publisherFilter]);
+
   // Initial load effect
   useEffect(() => {
     if (!initialLoadCompleted.current) {
@@ -69,14 +96,18 @@ const Grid: React.FC = () => {
   return (
     <div className="grid-container">
       <div className="grid">
-        {heroes.map((hero) => (
+        {filteredHeroes.map((hero) => (
           <HeroCard key={hero.uuid} hero={hero} />
         ))}
       </div>
       {loading && <div className="loading-message">Loading...</div>}
       {error && <div className="error-message">{error}</div>}
-      {heroes.length === 0 && !loading && !error && (
-        <div className="no-heroes-message">No heroes loaded. Click "Load More" to begin.</div>
+      {filteredHeroes.length === 0 && !loading && !error && (
+        <div className="no-heroes-message">
+          {heroes.length === 0 
+            ? "No heroes loaded. Click \"Load More\" to begin." 
+            : `No ${publisherFilter !== 'All' ? publisherFilter : ''} heroes found.`}
+        </div>
       )}
       <div className="load-more-container">
         <button className="button button-submit" onClick={loadMoreHeroes} disabled={loading}>

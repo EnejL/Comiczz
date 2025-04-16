@@ -1,6 +1,11 @@
 import '../styles/Breadcrumbs.css';
+import { PublisherFilter } from '../types/filters';
 
-export const Breadcrumbs = () => {
+interface BreadcrumbsProps {
+  currentFilter: PublisherFilter;
+}
+
+export const Breadcrumbs = ({ currentFilter }: BreadcrumbsProps) => {
   return (
     <nav className="breadcrumbs">
       <ul className="breadcrumbs-list container">
@@ -10,6 +15,11 @@ export const Breadcrumbs = () => {
         <li className="breadcrumbs-item">
           <span className="breadcrumbs-link">&gt; Comics</span>
         </li>
+        {currentFilter !== 'All' && (
+          <li className="breadcrumbs-item">
+            <span className="breadcrumbs-link">&gt; {currentFilter}</span>
+          </li>
+        )}
       </ul>
     </nav>
   );
