@@ -3,6 +3,8 @@ import { Superhero } from '../types/superhero';
 import { getHeroesBatch } from '../services/superheroApi';
 import { HeroCard } from './HeroCard';
 import { PublisherFilter } from '../types/filters';
+import { Spinner } from './Spinner';
+import FadingCard from './FadingCard';
 import '../styles/Grid.css';
 
 // UUID generator
@@ -26,6 +28,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
   const [heroes, setHeroes] = useState<HeroWithUUID[]>([]);
   const [filteredHeroes, setFilteredHeroes] = useState<HeroWithUUID[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentStartId, setCurrentStartId] = useState(1);
   const initialLoadCompleted = useRef(false);
@@ -61,6 +64,7 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
       console.error('Error loading heroes:', err);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
       initialLoadCompleted.current = true;
     }
   };
@@ -93,15 +97,30 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
     }
   }, []);
 
+  // Create an array of fading cards for the loading state
+  const renderFadingCards = () => {
+    return Array(8).fill(0).map((_, index) => (
+      <FadingCard key={`fading-card-${index}`} />
+    ));
+  };
+
   return (
     <div className="grid-container">
       <div className="grid">
         {filteredHeroes.map((hero) => (
           <HeroCard key={hero.uuid} hero={hero} />
         ))}
+        {loading && renderFadingCards()}
       </div>
-      {loading && <div className="loading-message">Loading...</div>}
+      
+      {loading && (
+        <div className="spinner-wrapper">
+          <Spinner size="large" />
+        </div>
+      )}
+      
       {error && <div className="error-message">{error}</div>}
+      
       {filteredHeroes.length === 0 && !loading && !error && (
         <div className="no-heroes-message">
           {heroes.length === 0 
@@ -109,11 +128,14 @@ const Grid: React.FC<GridProps> = ({ publisherFilter }) => {
             : `No ${publisherFilter !== 'All' ? publisherFilter : ''} heroes found.`}
         </div>
       )}
-      <div className="load-more-container">
-        <button className="button button-submit" onClick={loadMoreHeroes} disabled={loading}>
-          {loading ? 'Loading...' : 'Load More'}
-        </button>
-      </div>
+      
+      {!initialLoad && (
+        <div className="load-more-container">
+          <button className="button button-submit" onClick={loadMoreHeroes} disabled={loading}>
+            Load More
+          </button>
+        </div>
+      )}
     </div>
   );
 };
