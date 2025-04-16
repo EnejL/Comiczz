@@ -12,25 +12,67 @@ const api = axios.create({
   baseURL: `${API_BASE_URL}/${API_TOKEN}`
 });
 
-// Cache with localStorage persistence
+// Define resource types
+type ResourceType = 'powerstats' | 'biography' | 'appearance' | 'work' | 'connections' | 'image';
+
+// Cache with localStorage persistence and expiration
+interface CacheEntry<T> {
+  data: T;
+  expires: number;
+  dirty?: boolean;
+}
+
 const CACHE_KEY = 'superhero_cache';
-let cache: Record<string, any> = {};
+const CACHE_TTL = 24 * 60 * 60 * 1000;
+let cache: Record<string, CacheEntry<any>> = {};
+let dirtyKeys: Set<string> = new Set();
 
 // Load cache from localStorage on initialization
 try {
   const savedCache = localStorage.getItem(CACHE_KEY);
   if (savedCache) {
-    cache = JSON.parse(savedCache);
-    console.log(`Loaded ${Object.keys(cache).length} heroes from cache`);
+    const parsedCache = JSON.parse(savedCache);
+    const now = Date.now();
+    
+    // Filter out expired entries
+    cache = Object.entries(parsedCache).reduce((acc, [key, entry]) => {
+      if ((entry as CacheEntry<any>).expires > now) {
+        acc[key] = entry as CacheEntry<any>;
+      }
+      return acc;
+    }, {} as Record<string, CacheEntry<any>>);
   }
 } catch (error) {
   console.warn('Failed to load cache from localStorage:', error);
 }
 
-// Save cache to localStorage
+// Save only dirty cache entries to localStorage
 const saveCache = () => {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    if (dirtyKeys.size === 0) return;
+    
+    // Get existing cache from localStorage
+    const existingCacheStr = localStorage.getItem(CACHE_KEY);
+    let existingCache: Record<string, CacheEntry<any>> = {};
+    
+    if (existingCacheStr) {
+      existingCache = JSON.parse(existingCacheStr);
+    }
+    
+    // Update only dirty entries
+    dirtyKeys.forEach(key => {
+      if (cache[key]) {
+        existingCache[key] = cache[key];
+        // Clear dirty flag
+        cache[key].dirty = false;
+      } else {
+        // Item removed from cache
+        delete existingCache[key];
+      }
+    });
+    
+    localStorage.setItem(CACHE_KEY, JSON.stringify(existingCache));
+    dirtyKeys.clear();
   } catch (error) {
     console.warn('Failed to save cache to localStorage:', error);
   }
@@ -59,6 +101,17 @@ const rateLimitConfig = {
   concurrentRequests: 6
 };
 
+// Add to cache with expiration
+const addToCache = <T>(key: string, data: T): void => {
+  cache[key] = {
+    data,
+    expires: Date.now() + CACHE_TTL,
+    dirty: true
+  };
+  dirtyKeys.add(key);
+  debouncedSaveCache();
+};
+
 // Enhanced request handler with exponential backoff and caching
 const makeRequestWithRetry = async <T>(
   requestFn: () => Promise<T>,
@@ -67,7 +120,15 @@ const makeRequestWithRetry = async <T>(
 ): Promise<T> => {
   // Check cache first if cacheKey provided
   if (cacheKey && cache[cacheKey]) {
-    return cache[cacheKey];
+    // Return cached data if not expired
+    const now = Date.now();
+    if (cache[cacheKey].expires > now) {
+      return cache[cacheKey].data;
+    } else {
+      // Remove expired entry
+      delete cache[cacheKey];
+      dirtyKeys.add(cacheKey);
+    }
   }
 
   try {
@@ -75,8 +136,7 @@ const makeRequestWithRetry = async <T>(
     
     // Store in cache if cacheKey provided
     if (cacheKey) {
-      cache[cacheKey] = result;
-      debouncedSaveCache();
+      addToCache(cacheKey, result);
     }
     
     return result;
@@ -154,74 +214,40 @@ export const searchHeroes = async (query: string): Promise<SearchResponse> => {
   }
 };
 
-export const getHeroPowerstats = async (id: string): Promise<SuperheroResponse> => {
+// Generic function to replace redundant methods
+export const getHeroResource = async (id: string, resource?: ResourceType): Promise<SuperheroResponse> => {
+  const endpoint = resource ? `/${id}/${resource}` : `/${id}`;
+  const cacheKey = resource ? `hero-${id}-${resource}` : `hero-${id}`;
+  
   try {
-    const response = await api.get<SuperheroResponse>(`/${id}/powerstats`);
+    const response = await makeRequestWithRetry(
+      () => api.get<SuperheroResponse>(endpoint),
+      cacheKey
+    );
     return response.data;
   } catch (error) {
     return {
       response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero powerstats'
+      error: error instanceof Error ? error.message : `Failed to fetch hero ${resource || 'data'}`
     };
   }
 };
 
-export const getHeroBiography = async (id: string): Promise<SuperheroResponse> => {
-  try {
-    const response = await api.get<SuperheroResponse>(`/${id}/biography`);
-    return response.data;
-  } catch (error) {
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero biography'
-    };
-  }
-};
+// Maintain backward compatibility with existing code
+export const getHeroPowerstats = async (id: string): Promise<SuperheroResponse> => 
+  getHeroResource(id, 'powerstats');
 
-export const getHeroAppearance = async (id: string): Promise<SuperheroResponse> => {
-  try {
-    const response = await api.get<SuperheroResponse>(`/${id}/appearance`);
-    return response.data;
-  } catch (error) {
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero appearance'
-    };
-  }
-};
+export const getHeroBiography = async (id: string): Promise<SuperheroResponse> => 
+  getHeroResource(id, 'biography');
 
-export const getHeroWork = async (id: string): Promise<SuperheroResponse> => {
-  try {
-    const response = await api.get<SuperheroResponse>(`/${id}/work`);
-    return response.data;
-  } catch (error) {
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero work'
-    };
-  }
-};
+export const getHeroAppearance = async (id: string): Promise<SuperheroResponse> => 
+  getHeroResource(id, 'appearance');
 
-export const getHeroConnections = async (id: string): Promise<SuperheroResponse> => {
-  try {
-    const response = await api.get<SuperheroResponse>(`/${id}/connections`);
-    return response.data;
-  } catch (error) {
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero connections'
-    };
-  }
-};
+export const getHeroWork = async (id: string): Promise<SuperheroResponse> => 
+  getHeroResource(id, 'work');
 
-export const getHeroImage = async (id: string): Promise<SuperheroResponse> => {
-  try {
-    const response = await api.get<SuperheroResponse>(`/${id}/image`);
-    return response.data;
-  } catch (error) {
-    return {
-      response: 'error',
-      error: error instanceof Error ? error.message : 'Failed to fetch hero image'
-    };
-  }
-}; 
+export const getHeroConnections = async (id: string): Promise<SuperheroResponse> => 
+  getHeroResource(id, 'connections');
+
+export const getHeroImage = async (id: string): Promise<SuperheroResponse> => 
+  getHeroResource(id, 'image'); 
