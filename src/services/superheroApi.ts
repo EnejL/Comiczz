@@ -12,24 +12,74 @@ const api = axios.create({
   baseURL: `${API_BASE_URL}/${API_TOKEN}`
 });
 
+// Enhanced cache with localStorage persistence
+const CACHE_KEY = 'superhero_cache';
+let cache: Record<string, any> = {};
+
+// Load cache from localStorage on initialization
+try {
+  const savedCache = localStorage.getItem(CACHE_KEY);
+  if (savedCache) {
+    cache = JSON.parse(savedCache);
+    console.log(`Loaded ${Object.keys(cache).length} heroes from cache`);
+  }
+} catch (error) {
+  console.warn('Failed to load cache from localStorage:', error);
+}
+
+// Save cache to localStorage
+const saveCache = () => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch (error) {
+    console.warn('Failed to save cache to localStorage:', error);
+  }
+};
+
+// Debounced save to avoid excessive writes
+let saveCacheTimeout: NodeJS.Timeout | null = null;
+const debouncedSaveCache = () => {
+  if (saveCacheTimeout) {
+    clearTimeout(saveCacheTimeout);
+  }
+  saveCacheTimeout = setTimeout(() => {
+    saveCache();
+    saveCacheTimeout = null;
+  }, 1000);
+};
+
 // Enhanced delay function with exponential backoff
 const delay = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Rate limiting configuration
+// Rate limiting configuration - optimized for better performance
 const rateLimitConfig = {
-  baseDelay: 500,  // Base delay of 0.5 seconds
-  maxDelay: 5000,  // Maximum delay of 5 seconds
-  maxRetries: 3,   // Maximum number of retries
-  concurrentRequests: 3, // Number of concurrent requests
+  baseDelay: 200,       // Reduced from 500ms to 200ms
+  maxDelay: 2000,       // Reduced from 5000ms to 2000ms
+  maxRetries: 3,        // Keep the same number of retries
+  concurrentRequests: 6 // Increased from 3 to 6
 };
 
-// Enhanced request handler with exponential backoff
+// Enhanced request handler with exponential backoff and caching
 const makeRequestWithRetry = async <T>(
   requestFn: () => Promise<T>,
+  cacheKey?: string,
   retryCount = 0
 ): Promise<T> => {
+  // Check cache first if cacheKey provided
+  if (cacheKey && cache[cacheKey]) {
+    return cache[cacheKey];
+  }
+
   try {
-    return await requestFn();
+    const result = await requestFn();
+    
+    // Store in cache if cacheKey provided
+    if (cacheKey) {
+      cache[cacheKey] = result;
+      debouncedSaveCache();
+    }
+    
+    return result;
   } catch (error: any) {
     if ((error.response?.status === 429 || error.response?.status === 403) && retryCount < rateLimitConfig.maxRetries) {
       const backoffDelay = Math.min(
@@ -39,13 +89,13 @@ const makeRequestWithRetry = async <T>(
       
       console.log(`Rate limit hit. Retrying in ${backoffDelay}ms... (Attempt ${retryCount + 1}/${rateLimitConfig.maxRetries})`);
       await delay(backoffDelay);
-      return makeRequestWithRetry(requestFn, retryCount + 1);
+      return makeRequestWithRetry(requestFn, cacheKey, retryCount + 1);
     }
     throw error;
   }
 };
 
-// Process requests in chunks to respect rate limits
+// Process requests in chunks with optimized concurrency
 const processInChunks = async <T>(
   items: number[],
   processor: (id: number) => Promise<T>,
@@ -56,19 +106,22 @@ const processInChunks = async <T>(
   for (let i = 0; i < items.length; i += chunkSize) {
     const chunk = items.slice(i, i + chunkSize);
     const chunkResults = await Promise.all(
-      chunk.map(item => makeRequestWithRetry(() => processor(item)))
+      chunk.map(item => makeRequestWithRetry(
+        () => processor(item), 
+        `hero-${item}`  // Add cache key based on hero ID
+      ))
     );
     results.push(...chunkResults);
     
     if (i + chunkSize < items.length) {
-      await delay(rateLimitConfig.baseDelay);
+      await delay(rateLimitConfig.baseDelay / 2); // Reduced delay between chunks
     }
   }
   
   return results;
 };
 
-// Enhanced getHeroesBatch with better rate limiting
+// Enhanced getHeroesBatch with better rate limiting and caching
 export const getHeroesBatch = async (startId: number, batchSize: number): Promise<SuperheroResponse[]> => {
   const ids = Array.from({ length: batchSize }, (_, i) => startId + i);
   return processInChunks(ids, getHeroById, rateLimitConfig.concurrentRequests);
